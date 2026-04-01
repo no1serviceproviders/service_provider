@@ -2,19 +2,33 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background from '../components/Background';
+<<<<<<< HEAD
 import { useAuth } from '../context/AuthContext';
+=======
+import axios from 'axios';
+import { base_url } from '../components/config/config';
+>>>>>>> 764e791 (first commit)
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+<<<<<<< HEAD
   const { login } = useAuth();
+=======
+>>>>>>> 764e791 (first commit)
 
   const handleSubmit = async (e) => {
   e.preventDefault();
   try {
+<<<<<<< HEAD
     await login(email, password);
     navigate('/dashboard');
+=======
+   const res = await axios.post(`${base_url}/user/login`,{email,password},{withCredentials:true})
+   console.log(res.data)
+   navigate('/dashboard')
+>>>>>>> 764e791 (first commit)
   } catch (err) {
     alert(err.message);
   }
@@ -37,7 +51,11 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
+<<<<<<< HEAD
               placeholder="you@example.com"
+=======
+              placeholder=""
+>>>>>>> 764e791 (first commit)
               required
             />
           </div>

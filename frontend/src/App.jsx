@@ -2,18 +2,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
-import Pending from './pages/Pending';
 import Login from './pages/Login';          // import Login instead of Landing
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import PrivateRoute from './pages/PrivateRoute';
+import PublicRoute from './pages/PublicRoute';
+import Payment from './pages'
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
+    
       <Routes location={location} key={location.pathname}>
         {/* Root path now renders Login */}
         <Route path="/" element={
@@ -26,35 +26,33 @@ const AnimatedRoutes = () => {
             <Login />
           </motion.div>
         } />
+        <Route path='/payment' element={<Payment/>}/>
         <Route path="/register" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Register />
           </motion.div>
         } />
         <Route path="/admin" element={
-  <ProtectedRoute>
     <AdminDashboard />
-  </ProtectedRoute>
 } />
-<Route path="/pending" element={<Pending />} />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Dashboard />
-            </motion.div>
-          </ProtectedRoute>
-        } />
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        <Route element={<PrivateRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+
       </Routes>
-    </AnimatePresence>
+
   );
 };
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
         <AnimatedRoutes />
-      </AuthProvider>
     </BrowserRouter>
   );
 }

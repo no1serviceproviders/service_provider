@@ -1,12 +1,21 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Background from '../components/Background';
+<<<<<<< HEAD
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const username = user?.username || user?.name || 'User';
+=======
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { base_url } from '../components/config/config';
+
+
+const Dashboard = () => {
+>>>>>>> 764e791 (first commit)
 
   // Service cards data for home section
   const homeServices = [
@@ -26,8 +35,14 @@ const Dashboard = () => {
     { title: 'Consulting', description: 'Expert guidance for digital transformation.' }
   ];
 
+<<<<<<< HEAD
   const handleLogout = () => {
     logout();
+=======
+  const handleLogout = async() => {
+    await axios.post(`${base_url}/user/logout`,{},{withCredentials:true})
+    navigate('/')
+>>>>>>> 764e791 (first commit)
   };
 
   return (
@@ -41,12 +56,21 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
               <span className="text-white font-semibold text-sm">
+<<<<<<< HEAD
                 {username.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="hidden sm:block">
               <p className="text-white font-medium text-sm">{username}</p>
               <p className="text-white/60 text-xs">{user?.email}</p>
+=======
+                
+              </span>
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-white font-medium text-sm"></p>
+              <p className="text-white/60 text-xs"></p>
+>>>>>>> 764e791 (first commit)
             </div>
           </div>
 
@@ -78,7 +102,11 @@ const Dashboard = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
+<<<<<<< HEAD
             <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Welcome, {username} 👋</h1>
+=======
+            <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Welcome, 👋</h1>
+>>>>>>> 764e791 (first commit)
             <p className="text-xl text-white/70 mt-2">Explore our premium services crafted for your success</p>
           </motion.div>
 

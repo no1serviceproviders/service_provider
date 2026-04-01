@@ -1,5 +1,6 @@
 // src/pages/Register.jsx
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { QRCodeSVG } from 'qrcode.react'; // ✅ Correct import
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,19 +21,37 @@ const Register = () => {
     service: 'web',          // 'web' or 'marketing'
     paymentMethod: 'qr',     // 'qr' or 'upi'
     upiId: '',
+=======
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import Background from '../components/Background';
+import { base_url } from '../components/config/config';
+import axios from 'axios'
+
+const Register = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    phone: '',
+    email: '',
+>>>>>>> 764e791 (first commit)
     password: '',
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
+<<<<<<< HEAD
   // Compute price based on service
   const price = formData.service === 'web' ? 2 : 1;
 
+=======
+>>>>>>> 764e791 (first commit)
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+<<<<<<< HEAD
   const validate = () => {
     let tempErrors = {};
     if (!formData.companyName) tempErrors.companyName = 'Required';
@@ -61,6 +80,19 @@ const Register = () => {
       register(newUser);
       setRegisterSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
+=======
+
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+    try
+    {
+      const res = await axios.post(`${base_url}/user/register`,formData)
+      console.log(res.status)
+    }
+    catch(err)
+    {
+      console.log("Try again",err)
+>>>>>>> 764e791 (first commit)
     }
   };
 
@@ -88,6 +120,7 @@ const Register = () => {
         >
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-6">Create Account</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
+<<<<<<< HEAD
             {/* Company Name */}
             <div>
               <label className="block text-white/80 text-sm mb-1">Company Name</label>
@@ -100,6 +133,8 @@ const Register = () => {
               />
               {errors.companyName && <p className="text-red-300 text-xs mt-1">{errors.companyName}</p>}
             </div>
+=======
+>>>>>>> 764e791 (first commit)
 
             {/* Username */}
             <div>
@@ -140,6 +175,7 @@ const Register = () => {
               {errors.email && <p className="text-red-300 text-xs mt-1">{errors.email}</p>}
             </div>
 
+<<<<<<< HEAD
             {/* Address */}
             <div>
               <label className="block text-white/80 text-sm mb-1">Address</label>
@@ -247,6 +283,8 @@ fgColor="#ffffff"
               </div>
             )}
 
+=======
+>>>>>>> 764e791 (first commit)
             {/* Password */}
             <div>
               <label className="block text-white/80 text-sm mb-1">Password</label>
@@ -277,7 +315,11 @@ fgColor="#ffffff"
               type="submit"
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:scale-105 active:scale-95"
             >
+<<<<<<< HEAD
               Register & Pay ₹{price}
+=======
+              Register
+>>>>>>> 764e791 (first commit)
             </button>
           </form>
           <p className="text-center text-white/70 mt-5 text-sm sm:text-base">
