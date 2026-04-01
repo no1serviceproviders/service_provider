@@ -8,7 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './pages/PrivateRoute';
 import PublicRoute from './pages/PublicRoute';
-import Payment from './pages'
+import Payment from './pages/Payment'
 
 const AnimatedRoutes = () => {
   const location = useLocation();
