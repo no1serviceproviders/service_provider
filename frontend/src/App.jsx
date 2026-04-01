@@ -8,7 +8,6 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './pages/PrivateRoute';
 import PublicRoute from './pages/PublicRoute';
-import Payment from './forms/Payment'
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -26,7 +25,7 @@ const AnimatedRoutes = () => {
             <Login />
           </motion.div>
         } />
-        <Route path='/payment' element={<Payment/>}/>
+      
         <Route path="/register" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Register />
