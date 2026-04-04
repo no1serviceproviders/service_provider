@@ -2,19 +2,21 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
-import Login from './pages/Login';          // import Login instead of Landing
+import Pending from './pages/Pending';
+import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import PrivateRoute from './pages/PrivateRoute';
-import PublicRoute from './pages/PublicRoute';
+import ContactPage from './pages/ContactPage';   // ✅ import the new Contact page
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
-    
+    <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Root path now renders Login */}
+        {/* Public routes */}
         <Route path="/" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Login />
@@ -25,33 +27,42 @@ const AnimatedRoutes = () => {
             <Login />
           </motion.div>
         } />
-      
         <Route path="/register" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Register />
           </motion.div>
         } />
+        {/* Contact page – public (no auth required) */}
+        <Route path="/contact" element={
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ContactPage />
+          </motion.div>
+        } />
+        {/* Protected routes */}
         <Route path="/admin" element={
-    <AdminDashboard />
-} />
-        <Route element={<PublicRoute />}>
-          <Route path="/" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-
-        <Route element={<PrivateRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/pending" element={<Pending />} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Dashboard />
+            </motion.div>
+          </ProtectedRoute>
+        } />
       </Routes>
-
+    </AnimatePresence>
   );
 };
 
 function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
         <AnimatedRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
