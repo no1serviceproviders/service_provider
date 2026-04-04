@@ -1,8 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cookieparser = require('cookie-parser')
+const bcrypt = require('bcryptjs')
 const cors = require('cors')
-const payment = require('./routes/paymentRoute')
+const { newusermodel } = require('./models/Model')
 require("dotenv").config()
 
 const app = express()
@@ -26,9 +27,34 @@ mongoose.connect(process.env.MONGO_URL)
     console.log("error in db connection",err)
 })
 
+app.post('/api/user/login',async(req,res)=>
+{
+    const {email,password} = req.body
+    try
+    {
+        console.log(email,password)
+        const exist = await newusermodel.findOne({email:email})
+        console.log(exist)
+        if(!exist)
+        {
+            console.log('no mail')
+            return res.status(400).json({msg:"mail is invalid"})
+        }
+        const passwordverify = await bcrypt.compare(password,exist.password)
+        if(!passwordverify)
+        {
+            console.log('mismatch')
+            return res.status(401).json({msg:"password is invalid"})
+        }
+        res.status(200).json({msg:'login'})
+    }
+    catch
+    {
+        console.log('error')
+    }
+})
 
 app.use('/api/user',require('./routes/MemberRegister'))
-app.use('/api/service/payment',require('./routes/paymentRoute'))
 
 app.listen(process.env.PORT,()=>
 {

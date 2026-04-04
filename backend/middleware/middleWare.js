@@ -1,17 +1,23 @@
-const jwt = require("jsonwebtoken");
-
-const authMiddleware = (req, res, next) => {
-  const token = req.cookies.token;
-
-  if (!token) return res.status(401).json({success:false});
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_KEY);
-    req.user = decoded;
-    next();
-  } catch {
-    return res.status(401).json({success:false});
-  }
-};
-
-module.exports = authMiddleware;
+const {email,password} = req.body
+    try
+    {
+        console.log(email,password)
+        const exist = await newusermodel.findOne({email:email})
+        console.log(exist)
+        if(!exist)
+        {
+            console.log('no mail')
+            return res.status(400).json({msg:"mail is invalid"})
+        }
+        const passwordverify = await bcrypt.compare(password,exist.password)
+        if(!passwordverify)
+        {
+            console.log('mismatch')
+            return res.status(401).json({msg:"password is invalid"})
+        }
+        res.status(200).json({msg:'login'})
+    }
+    catch
+    {
+        console.log('error')
+    }

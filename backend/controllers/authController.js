@@ -31,30 +31,39 @@ exports.register=async(req,res)=>
 exports.login=async(req,res)=>
 {
     const {email,password} = req.body
-    try
-    {
-        const data = await newusermodel.findOne({email:email})
-        if(!data) return res.status(400).json({msg:"user not found"})
-        const match = await bcrypt.compare(password,data.password) 
-        if(!match) return res.status(402).json({msg:"invalid password"})
-        
-        const token = jwt.sign(
-            {id:data._id},
-            process.env.JWT_KEY,
-            {expiresIn:"1hr"}
-        )
-        res.cookie("token",token,{
-            httpOnly:true,
-            secure:true,
-            sameSite:"Strict",
-            maxAge:60*60*1000
-        })
-        res.status(200).json({msg:"log in successfully"})
-    }
-    catch
-    {
-        res.status(500).json({msg:"can not login"})
-    }
+        try
+        {
+            console.log(email,password)
+            const exist = await newusermodel.findOne({email:email})
+            console.log(exist)
+            if(!exist)
+            {
+                console.log('no mail')
+                return res.status(400).json({msg:"mail is invalid"})
+            }
+            const passwordverify = await bcrypt.compare(password,exist.password)
+            if(!passwordverify)
+            {
+                console.log('mismatch')
+                return res.status(401).json({msg:"password is invalid"})
+            }
+            const token = jwt.sign(
+                {id:exist._id},
+                process.env.JWT_KEY,
+            )
+            res.cookie("token",token,
+                {
+                    httpOnly:true,
+                    secure:false,
+                    sameSite:"strict",
+                }
+            )
+            res.status(200).json({msg:'login'})
+        }
+        catch
+        {
+            console.log('error')
+        }
 }
 
 exports.verify=(req,res)=>
