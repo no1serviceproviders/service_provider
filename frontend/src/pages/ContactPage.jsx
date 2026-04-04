@@ -8,7 +8,7 @@ const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    serviceType: 'web', // 'web', 'app', 'marketing'
+    serviceType: 'web', // 'web', 'app' 'marketing'
     // Web fields
     webPages: '',
     webFeatures: [],

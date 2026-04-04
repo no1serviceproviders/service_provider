@@ -15,7 +15,7 @@ const Dashboard = () => {
   const dropdownRef = useRef(null);
   const drawerRef = useRef(null);
 
-  // Mock purchased services (replace with real data from your backend)
+  // Mock purchased services (replace with data from your backend)
   const purchasedServices = [
     { id: 1, name: 'Web Development - Premium Package', date: '2025-02-15', status: 'Active' },
     { id: 2, name: 'SEO Marketing - Quarterly Plan', date: '2025-03-01', status: 'Active' },
