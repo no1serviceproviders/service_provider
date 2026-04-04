@@ -9,7 +9,7 @@ import Pending from './pages/Pending';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import ContactPage from './pages/ContactPage';   // ✅ import the new Contact page
+import ContactPage from './pages/ContactPage';   
 
 const AnimatedRoutes = () => {
   const location = useLocation();
