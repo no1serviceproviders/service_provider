@@ -44,7 +44,7 @@ const AuthRoute = ({ children }) => {
     return <h1 className="text-center mt-10">Loading...</h1>
   }
 
-  return !auth ? children : <Navigate to="/" replace />
+  return !auth ? children : <Navigate to="/" />
 }
 
 export default AuthRoute
