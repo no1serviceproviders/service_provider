@@ -8,7 +8,7 @@ const {
   dashboard,
   createOrder,
   verifyPayment,
-  verifyUser
+  verify
 } = require("../controllers/authController")
 
 const { verifyToken } = require("../middleware/middleWare")
@@ -16,7 +16,7 @@ const { verifyToken } = require("../middleware/middleWare")
 router.post("/user/login", login)
 router.post("/user/register", register)
 router.get("/user/logout", logout)
-router.get("/verify", verifyToken, verifyUser)
+router.get("/verify", verifyToken, verify)
 router.get("/dashboard", verifyToken, dashboard)
 router.post('/payment/create-order',createOrder)
 router.post('/payment/verify',verifyPayment)
