@@ -158,12 +158,27 @@ exports.login = async (req, res) => {
 
 
 exports.verify = (req, res) => {
-  res.json({ success: true, user: req.user })
+  const token = req.cookies.token
+
+  if (!token) {
+    return res.status(401).json({ msg: "No token" })
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_KEY)
+    res.json({ msg: "Valid user" })
+  } catch {
+    res.status(401).json({ msg: "Invalid token" })
+  }
 }
 
 
 exports.logout = (req, res) => {
-  res.clearCookie("token")
+  res.clearCookie("token",{
+    httpOnly: true,
+    secure: true,
+    sameSite: "None"
+  })
   res.json({ msg: "Logged out" })
 }
 
