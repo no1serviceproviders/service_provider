@@ -145,8 +145,8 @@ exports.login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "strict"
+      secure: true,
+      sameSite: "None"
     })
 
     return res.status(200).json({ msg: "Login success ✅" })
