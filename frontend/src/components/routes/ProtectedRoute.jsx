@@ -45,7 +45,7 @@ const ProtectedRoute = ({ children }) => {
     return <h1 className="text-center mt-10">Loading...</h1>
   }
 
-  return auth ? children : <Navigate to="/login" replace />
+  return auth ? children : <Navigate to="/login" />
 }
 
 export default ProtectedRoute
