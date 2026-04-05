@@ -10,7 +10,7 @@ app.use(express.json())
 app.use(cors(
     {
         // origin: "http://localhost:5173",
-        origin:"https://service-provider-nbcy.onrender.com",
+        origin:"https://service-provider-frontend-hlu9.onrender.com",
         credentials:true
     }
 ))
