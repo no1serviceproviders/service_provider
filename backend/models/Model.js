@@ -12,19 +12,17 @@ const newuserschema = new mongoose.Schema(
 const newusermodel = mongoose.model("user",newuserschema,"user")
 
 
-const servicepaymentschema = new mongoose.Schema(
+const paymentschema = new mongoose.Schema(
     {
-        orderId: String,
-        paymentId: String,
-        amount: Number,
-        status: String,
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        }
-    }
+        orderId:String,
+        mail:String,
+        service:String,
+        paymentId:String,
+        amount:Number,
+        status:String,
+    },{timestamps:true}
 )
 
-const servicepaymentmodel = mongoose.model("servicepayment",servicepaymentschema,"servicepayment")
+const paymentModel = mongoose.model("servicepayment",paymentschema,"servicepayment")
 
-module.exports = {newusermodel,servicepaymentmodel}
+module.exports = {newusermodel,paymentModel}

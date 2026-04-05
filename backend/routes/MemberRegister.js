@@ -1,16 +1,22 @@
-const express = require('express')
+const express = require("express")
 const router = express.Router()
-const {register,login,logout, verify} = require('../controllers/authController')
-const auth = require('../middleware/middleWare')
 
-router.post('/register',register)
-router.post('/login',login)
-router.get('/verify',auth,verify)
-router.post('/logout',logout)
+const {
+  login,
+  register,
+  logout,
+  dashboard,
+  createOrder,
+  verifyPayment
+} = require("../controllers/authController")
 
-router.get('/dashboard',auth,(req,res)=>
-{
-    res.json({msg:"welcome user"})
-})
+const { verifyToken } = require("../middleware/middleWare")
 
-module.exports = router;
+router.post("/user/login", login)
+router.post("/user/register", register)
+router.post("/user/logout", logout)
+router.get("/dashboard", verifyToken, dashboard)
+router.post('/payment/create-order',createOrder)
+router.post('/payment/verify',verifyPayment)
+
+module.exports = router

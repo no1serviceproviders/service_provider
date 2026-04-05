@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
-import axios from 'axios'
+import axios from '../api/axios'
 import { base_url } from '../config/config'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
 
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [msg, setMsg] = useState(null)
 
@@ -29,8 +31,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post(`${base_url}/user/login`, formData)
-
+      const res = await axios.post(`${base_url}/api/user/login`, formData,{withCredentials:true})
       if (res.status === 200) {
         setMsg(
           <p className='text-green-700 p-2 rounded-xl bg-green-200 w-fit'>
@@ -38,13 +39,14 @@ const Login = () => {
           </p>
         )
         console.log('login successfully')
+        navigate("/")
       }
 
     } catch (err) {
 
       if (err.response) {
         const status = err.response.status
-
+        console.log(status,err)
         switch (status) {
           case 400:
             setMsg(
