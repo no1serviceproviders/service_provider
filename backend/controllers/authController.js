@@ -129,18 +129,19 @@ exports.login = async (req, res) => {
     const user = await newusermodel.findOne({ email })
 
     if (!user) {
-      return res.status(400).json({ msg: "Email is invalid ❌" })
+      return res.status(400).json({ msg: "Email is invalid" })
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
 
     if (!isMatch) {
-      return res.status(401).json({ msg: "Password is invalid ❌" })
+      return res.status(401).json({ msg: "Password is invalid" })
     }
 
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_KEY
+      process.env.JWT_KEY,
+      { expiresIn: "1d" }   // ✅ FIX
     )
 
     res.cookie("token", token, {
@@ -149,14 +150,14 @@ exports.login = async (req, res) => {
       sameSite: "None"
     })
 
-    return res.status(200).json({ msg: "Login success ✅" })
+    return res.status(200).json({ msg: "Login success" })
 
   } catch (err) {
-    return res.status(500).json({ msg: "Server error ❌" })
+    return res.status(500).json({ msg: "Server error" })
   }
 }
 
-
+// VERIFY (FIX: attach user)
 exports.verify = (req, res) => {
   const token = req.cookies.token
 
@@ -165,16 +166,21 @@ exports.verify = (req, res) => {
   }
 
   try {
-    jwt.verify(token, process.env.JWT_KEY)
-    res.json({ msg: "Valid user" })
+    const decoded = jwt.verify(token, process.env.JWT_KEY)
+
+    return res.json({
+      msg: "Valid user",
+      user: decoded   // ✅ FIX
+    })
+
   } catch {
-    res.status(401).json({ msg: "Invalid token" })
+    return res.status(401).json({ msg: "Invalid token" })
   }
 }
 
-
+// LOGOUT
 exports.logout = (req, res) => {
-  res.clearCookie("token",{
+  res.clearCookie("token", {
     httpOnly: true,
     secure: true,
     sameSite: "None"
@@ -182,13 +188,96 @@ exports.logout = (req, res) => {
   res.json({ msg: "Logged out" })
 }
 
-
+// DASHBOARD (FIX: verify token here)
 exports.dashboard = (req, res) => {
-  res.json({
-    msg: "Dashboard data",
-    user: req.user
-  })
+  const token = req.cookies.token
+
+  if (!token) {
+    return res.status(401).json({ msg: "No token" })
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_KEY)
+
+    return res.json({
+      msg: "Dashboard data",
+      user: decoded   // ✅ FIX
+    })
+
+  } catch {
+    return res.status(401).json({ msg: "Invalid token" })
+  }
 }
+
+
+
+// exports.login = async (req, res) => {
+//   const { email, password } = req.body
+
+//   try {
+//     const user = await newusermodel.findOne({ email })
+
+//     if (!user) {
+//       return res.status(400).json({ msg: "Email is invalid ❌" })
+//     }
+
+//     const isMatch = await bcrypt.compare(password, user.password)
+
+//     if (!isMatch) {
+//       return res.status(401).json({ msg: "Password is invalid ❌" })
+//     }
+
+//     const token = jwt.sign(
+//       { id: user._id },
+//       process.env.JWT_KEY
+//     )
+
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: true,
+//       sameSite: "None"
+//     })
+
+//     return res.status(200).json({ msg: "Login success ✅" })
+
+//   } catch (err) {
+//     return res.status(500).json({ msg: "Server error ❌" })
+//   }
+// }
+
+
+// exports.verify = (req, res) => {
+//   const token = req.cookies.token
+
+//   if (!token) {
+//     return res.status(401).json({ msg: "No token" })
+//   }
+
+//   try {
+//     jwt.verify(token, process.env.JWT_KEY)
+//     res.json({ msg: "Valid user" })
+//   } catch {
+//     res.status(401).json({ msg: "Invalid token" })
+//   }
+// }
+
+
+// exports.logout = (req, res) => {
+//   res.clearCookie("token",{
+//     httpOnly: true,
+//     secure: true,
+//     sameSite: "None"
+//   })
+//   res.json({ msg: "Logged out" })
+// }
+
+
+// exports.dashboard = (req, res) => {
+//   res.json({
+//     msg: "Dashboard data",
+//     user: req.user
+//   })
+// }
 
 exports.createOrder = async(req, res) => {
   try
