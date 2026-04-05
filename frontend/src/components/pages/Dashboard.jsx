@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../api/axios'
-import { base_url } from '../config/config';
+//import { base_url } from '../config/config';
 
 const Dashboard = () => {
 
@@ -52,8 +52,8 @@ const Dashboard = () => {
   }, [isProfileDrawerOpen]);
 
   const handleLogout = async () => {
-    await axios.post(`${base_url}/api/user/logout`)
-    window.location.href="/login"
+    await axios.get("/api/user/logout")
+    navigate("/login")
     setIsDropdownOpen(false);
   };
 
