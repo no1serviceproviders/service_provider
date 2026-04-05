@@ -64,7 +64,7 @@
 
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation,Navigate } from 'react-router-dom';
 import Login from './components/forms/Login';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Register from './components/forms/Register';
