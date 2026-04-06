@@ -9,7 +9,7 @@ const app = express()
 app.use(express.json())
 app.use(cors(
     {
-        origin: "https://service-provider-frontend-hlu9.onrender.com",
+        origin: "http://localhost:5173",
         credentials:true
     }
 ))
@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGO_URL)
 })
 
 
-app.use('/api',require('./routes/MemberRegister'))
+app.use('/api',require('./routes/routes'))
 
 app.listen(process.env.PORT,()=>
 {
