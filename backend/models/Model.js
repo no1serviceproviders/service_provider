@@ -9,7 +9,7 @@ const newuserschema = new mongoose.Schema(
     }
 )
 
-const newusermodel = mongoose.model("user",newuserschema,"user")
+const usermodel = mongoose.model("user",newuserschema,"user")
 
 
 const paymentschema = new mongoose.Schema(
@@ -25,4 +25,4 @@ const paymentschema = new mongoose.Schema(
 
 const paymentModel = mongoose.model("servicepayment",paymentschema,"servicepayment")
 
-module.exports = {newusermodel,paymentModel}
+module.exports = {usermodel,paymentModel}

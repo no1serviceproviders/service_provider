@@ -1,95 +1,6 @@
-// const jwt = require('jsonwebtoken')
-// const bcrypt = require('bcryptjs')
-// const {newusermodel} = require('../models/Model')
-// require("dotenv").config()
-
-// exports.register=async(req,res)=>
-// {
-//     const {username,phone,email,password} = req.body
-//     try
-//     {
-//         const exist = await newusermodel.findOne({email:email})
-//         if(exist)
-//         {
-//             console.log('exist')
-//             return res.status(400).json({msg:"user already exist"})
-//         }
-//         const hashpassword = await bcrypt.hash(password,10)
-//         await newusermodel.create({
-//             username:username,phone:phone,email:email,password:hashpassword
-//         })
-//         console.log('saved')
-//         res.json({msg:"registered successfully"})
-//         res.status(200)
-//     }
-//     catch
-//     {
-//         res.status(500).json({msg:"can not register"})
-//     }
-// }
-
-// exports.login=async(req,res)=>
-// {
-//     const {email,password} = req.body
-//         try
-//         {
-//             console.log(email,password)
-//             const user = await newusermodel.findOne({email:email})
-//             console.log(user)
-//             if(!user)
-//             {
-//                 console.log('no mail')
-//                 return res.status(400).json({msg:"mail is invalid"})
-//             }
-//             const passwordverify = await bcrypt.compare(password,user.password)
-//             if(!passwordverify)
-//             {
-//                 console.log('mismatch')
-//                 return res.status(401).json({msg:"password is invalid"})
-//             }
-//             const token = jwt.sign(
-//                 {id:user._id},
-//                 process.env.JWT_KEY,
-//             )
-//             res.cookie("token",token,
-//                 {
-//                     httpOnly:true,
-//                     secure:false,
-//                     sameSite:"strict",
-//                 }
-//             )
-//             res.status(200).json({msg:'login'})
-//         }
-//         catch
-//         {
-//             console.log('error')
-//         }
-// }
-
-// exports.verify=(req,res)=>
-// {
-//     res.json({success:true,user:req.data})
-// }
-
-// exports.logout=(req,res)=>
-// {
-//     res.clearCookie("token")
-//     res.json({ msg: "Logged out" });
-// }
-
-// exports.dashboard=(req,res)=>
-// {
-//     res.json(
-//         {
-//             msg:"dashboard",
-//             user:req.user
-//         }
-//     )
-// }
-
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
-const { newusermodel,paymentModel } = require('../models/Model')
+const { usermodel,paymentModel } = require('../models/Model')
 const razorpay = require('../config/razorpay')
 const crypto = require('crypto')
 require("dotenv").config()
@@ -107,7 +18,7 @@ exports.register = async (req, res) => {
 
     const hashpassword = await bcrypt.hash(password, 10)
 
-    await newusermodel.create({
+    await usermodel.create({
       username,
       phone,
       email,
@@ -126,7 +37,7 @@ exports.login = async (req, res) => {
   const { email, password } = req.body
 
   try {
-    const user = await newusermodel.findOne({ email })
+    const user = await usermodel.findOne({ email })
 
     if (!user) {
       return res.status(400).json({ msg: "Email is invalid" })
@@ -141,23 +52,24 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_KEY,
-      { expiresIn: "1d" }   // ✅ FIX
+      { expiresIn: "1d" }   
     )
 
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
-      sameSite: "None"
+      sameSite: "None",
+      path:"/"
     })
 
-    return res.status(200).json({ msg: "Login success" })
+    return res.status(200).json({ msg: "Login success",mail:user.email })
 
   } catch (err) {
     return res.status(500).json({ msg: "Server error" })
   }
 }
 
-// VERIFY (FIX: attach user)
+
 exports.verify = (req, res) => {
   const token = req.cookies.token
 
@@ -178,14 +90,17 @@ exports.verify = (req, res) => {
   }
 }
 
-// LOGOUT
-exports.logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None"
-  })
-  res.json({ msg: "Logged out" })
+exports.profile = async(req,res) => {
+  try {
+    const user = await usermodel.findById(req.user.id).select("-password")
+    res.status(200).json({
+      success:true,
+      user
+    })
+  }
+  catch(err) {
+    res.status(500).json({msg:err.message})
+  }
 }
 
 // DASHBOARD (FIX: verify token here)
@@ -201,83 +116,13 @@ exports.dashboard = (req, res) => {
 
     return res.json({
       msg: "Dashboard data",
-      user: decoded   // ✅ FIX
+      user: decoded   
     })
 
   } catch {
     return res.status(401).json({ msg: "Invalid token" })
   }
 }
-
-
-
-// exports.login = async (req, res) => {
-//   const { email, password } = req.body
-
-//   try {
-//     const user = await newusermodel.findOne({ email })
-
-//     if (!user) {
-//       return res.status(400).json({ msg: "Email is invalid ❌" })
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password)
-
-//     if (!isMatch) {
-//       return res.status(401).json({ msg: "Password is invalid ❌" })
-//     }
-
-//     const token = jwt.sign(
-//       { id: user._id },
-//       process.env.JWT_KEY
-//     )
-
-//     res.cookie("token", token, {
-//       httpOnly: true,
-//       secure: true,
-//       sameSite: "None"
-//     })
-
-//     return res.status(200).json({ msg: "Login success ✅" })
-
-//   } catch (err) {
-//     return res.status(500).json({ msg: "Server error ❌" })
-//   }
-// }
-
-
-// exports.verify = (req, res) => {
-//   const token = req.cookies.token
-
-//   if (!token) {
-//     return res.status(401).json({ msg: "No token" })
-//   }
-
-//   try {
-//     jwt.verify(token, process.env.JWT_KEY)
-//     res.json({ msg: "Valid user" })
-//   } catch {
-//     res.status(401).json({ msg: "Invalid token" })
-//   }
-// }
-
-
-// exports.logout = (req, res) => {
-//   res.clearCookie("token",{
-//     httpOnly: true,
-//     secure: true,
-//     sameSite: "None"
-//   })
-//   res.json({ msg: "Logged out" })
-// }
-
-
-// exports.dashboard = (req, res) => {
-//   res.json({
-//     msg: "Dashboard data",
-//     user: req.user
-//   })
-// }
 
 exports.createOrder = async(req, res) => {
   try
@@ -330,3 +175,14 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ error: "Verification failed" });
   }
 };
+
+exports.logout = (req, res) => {
+  console.log("logout calling")
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    path:"/"
+  })
+  res.json({ msg: "Logged out" })
+}

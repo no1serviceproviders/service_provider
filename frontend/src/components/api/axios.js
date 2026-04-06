@@ -1,21 +1,7 @@
-// import axios from "axios"
-
-// axios.defaults.withCredentials = true
-
-// axios.interceptors.response.use(
-//   res => res,
-//   err => {
-//     return Promise.reject(err)
-//   }
-// )
-
-// export default axios
-
-
 import axios from "axios"
 
 const instance = axios.create({
-  baseURL: "https://service-provider-nbcy.onrender.com", // backend URL
+  baseURL: "http://localhost:3000",
   withCredentials: true
 })
 

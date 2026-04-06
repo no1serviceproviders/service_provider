@@ -1,21 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../api/axios'
-//import { base_url } from '../config/config';
+import instance from '../api/axios';
 
 const Dashboard = () => {
 
   const navigate = useNavigate();
-  // const username = user?.username || user?.name || 'User';
-  // const userEmail = user?.email || 'user@example.com';
 
+  const [userDetails, setUserDetails] = useState()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const dropdownRef = useRef(null);
   const drawerRef = useRef(null);
 
-  // Mock purchased services (replace with data from your backend)
+  useEffect(()=>
+  {
+   const fetchdata = async () => {
+    try {
+      const res = await instance.get("/api/user/profile")
+      console.log(res.data.user)
+      setUserDetails(res.data.user)
+    }
+    catch(err) {
+      console.log("error",err)
+    }
+   }
+   fetchdata()
+  },[])
+
   const purchasedServices = [
     { id: 1, name: 'Web Development - Premium Package', date: '2025-02-15', status: 'Active' },
     { id: 2, name: 'SEO Marketing - Quarterly Plan', date: '2025-03-01', status: 'Active' },
@@ -52,8 +64,8 @@ const Dashboard = () => {
   }, [isProfileDrawerOpen]);
 
   const handleLogout = async () => {
-    await axios.get("/api/user/logout")
-    navigate("/login")
+    await instance.get("/api/user/logout")
+    window.location.href="/login"
     setIsDropdownOpen(false);
   };
 
