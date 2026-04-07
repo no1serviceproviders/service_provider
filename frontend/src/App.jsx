@@ -18,9 +18,9 @@ const AnimatedRoutes = () => {
         <Route 
           path="https://service-provider-chi.vercel.app/login" 
           element={
-            <AuthRoute>
+            {/* <AuthRoute> */}
               <Login />
-            </AuthRoute>
+            {/* </AuthRoute> */}
           } 
         />
 
