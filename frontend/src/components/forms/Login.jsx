@@ -139,7 +139,7 @@ const Login = () => {
 
         <p className="text-sm text-gray-500 mt-6 text-center">
           Don’t have an account?
-          <a href="https://service-provider-chi.vercel.app/register" className="text-black font-medium ml-1 hover:underline">
+          <a href="/register" className="text-black font-medium ml-1 hover:underline">
             Sign up
           </a>
         </p>
