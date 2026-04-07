@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { base_url } from '../config/config';
+import instance from '../api/axios'
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +25,7 @@ const ContactPage = () => {
   {
     try
     {
-      const {data:order} = await axios.post(`${base_url}/api/payment/create-order`,{amount:10})
+      const {data:order} = await instance.post("/api/payment/create-order",{amount:10})
       const options = {
         key:"rzp_test_SWjsMZ52d9oTcb",
         amount:order.amount,
@@ -40,7 +39,7 @@ const ContactPage = () => {
           wallet: true
         },
         handler: async function(response){
-          const verifyRes = await axios.post(`${base_url}/api/payment/verify`,
+          const verifyRes = await instance.post("/api/payment/verify",
             {
               ...response,amount:10,
             }
