@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import axios from '../api/axios'
-import { base_url } from '../config/config'
 import { useNavigate, Link } from 'react-router-dom'
 
 const Register = () => {
@@ -39,7 +38,7 @@ const Register = () => {
 
     try {
       const res = await axios.post(
-        `${base_url}/api/user/register`,
+        "/api/user/register",
         formData
       )
 
