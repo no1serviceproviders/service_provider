@@ -65,7 +65,7 @@ exports.login = async (req, res) => {
     return res.status(200).json({ msg: "Login success",mail:user.email })
 
   } catch (err) {
-    return res.status(500).json({ msg: "Server error" })
+    return res.status(500).json({ msg: "Server error",err:err })
   }
 }
 
