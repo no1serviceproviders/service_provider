@@ -41,7 +41,7 @@ const Register = () => {
         "/api/user/register",
         formData
       )
-
+      console.log(res)
       if (res.status === 200) {
         setMsg(
           <p className='text-green-700 p-2 rounded-xl bg-green-200 w-fit'>
