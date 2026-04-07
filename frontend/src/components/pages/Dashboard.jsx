@@ -65,7 +65,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     await instance.get("/api/user/logout")
-    window.location.href="/login"
+   navigate("/login")
     setIsDropdownOpen(false);
   };
 
