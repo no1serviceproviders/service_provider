@@ -43,7 +43,7 @@ const AnimatedRoutes = () => {
         />
 
   <Route 
-          path="/" 
+          path="/contact" 
           element={
             <ProtectedRoute>
               <ContactPage />
