@@ -1,6 +1,5 @@
 import React from 'react'
-import axios from 'axios'
-import { base_url } from '../config/config'
+import instance from '../api/axios'
 
 const Payment = () => {
     
@@ -8,7 +7,7 @@ const Payment = () => {
     {
         try
         {
-            const {data:order} = await axios.post(`${base_url}/service/payment/create`)
+            const {data:order} = await axios.post("/api/service/payment/create")
             const options = {
                 key:"rzp_test_SWjsMZ52d9oTcb",
                 amount:order.amount,
@@ -18,7 +17,7 @@ const Payment = () => {
                 order_id:order.id,
 
                 handler:async function (response) {
-                    const res = await axios.post(`${base_url}/service/payment/verify`,response)
+                    const res = await instance.post("$/api/service/payment/verify",response)
                     if(res.data.success)
                     {
                         alert("payment successfull")
