@@ -9,7 +9,7 @@ const app = express()
 app.use(express.json())
 app.use(cors(
     {
-        origin: "https://service-provider-henna.vercel.app",
+        origin: "https://service-provider-chi.vercel.app",
         credentials:true
     }
 ))
