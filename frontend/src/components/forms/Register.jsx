@@ -57,7 +57,7 @@ const Register = () => {
       }
 
     } catch (err) {
-
+      console.log(err)
       if (err.response?.status === 400) {
         setMsg(
           <p className='text-red-500 p-2 rounded-xl bg-red-200 w-fit'>
