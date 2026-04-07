@@ -7,7 +7,7 @@ const Payment = () => {
     {
         try
         {
-            const {data:order} = await axios.post("/api/service/payment/create")
+            const {data:order} = await instance.post("/api/service/payment/create")
             const options = {
                 key:"rzp_test_SWjsMZ52d9oTcb",
                 amount:order.amount,
