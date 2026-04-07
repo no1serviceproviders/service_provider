@@ -42,6 +42,15 @@ const AnimatedRoutes = () => {
           } 
         />
 
+  <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <ContactPage />
+            </ProtectedRoute>
+          } 
+        />
+
         {/* fallback */}
         <Route path="*" element={<Navigate to="/login" />} />
 
