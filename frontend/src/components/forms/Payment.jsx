@@ -17,7 +17,7 @@ const Payment = () => {
                 order_id:order.id,
 
                 handler:async function (response) {
-                    const res = await instance.post("$/api/service/payment/verify",response)
+                    const res = await instance.post("/api/service/payment/verify",response)
                     if(res.data.success)
                     {
                         alert("payment successfull")
