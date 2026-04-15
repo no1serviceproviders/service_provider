@@ -1,105 +1,181 @@
 // src/pages/ContactPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import Background from '../components/Background';
 import { Link } from 'react-router-dom';
-import instance from '../api/axios'
 
 const ContactPage = () => {
-  const [formData, setFormData] = useState({
-    serviceType: 'web', // 'web', 'app' 'marketing'
-    // Web fields
-    webPages: '',
-    webFeatures: [],
-    // App fields
-    appPlatforms: [],
-    appType: '',
-    // Marketing fields
-    marketingServices: [],
-    targetAudience: '',
-    budgetRange: '',
-    // Common
-    additionalInfo: ''
+  // Load saved form data from localStorage on mount
+  const loadSavedData = () => {
+    const saved = localStorage.getItem('contactFormData');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const [formData, setFormData] = useState(() => {
+    const saved = loadSavedData();
+    if (saved) return saved;
+    return {
+      name: '',
+      email: '',
+      serviceType: 'web',
+      webPages: '',
+      webFeatures: [],
+      appPlatforms: [],
+      appType: '',
+      marketingServices: [],
+      targetAudience: '',
+      budgetRange: '',
+      additionalInfo: ''
+    };
   });
 
-  const handlePayment = async()=>
-  {
-    try
-    {
-      const {data:order} = await instance.post("/api/payment/create-order",{amount:10})
-      const options = {
-        key:"rzp_test_SWjsMZ52d9oTcb",
-        amount:order.amount,
-        currency:"INR",
-        name:"serviceproviders",
-        order_id:order.id,
-        method: {
-          upi: true,    
-          card: true,
-          netbanking: true,
-          wallet: true
-        },
-        handler: async function(response){
-          const verifyRes = await instance.post("/api/payment/verify",
-            {
-              ...response,amount:10,
-            }
-          )
-          if(verifyRes.data.success)
-          {
-            alert("payment success")
-          }
-          else{
-            alert("payment failed")
-          }
-        }
-      }
-      const rzp = new window.Razorpay(options);
-      rzp.open()
-    }
-    catch(err){
-      console.log(err,"in open payment")
-    }
-  }
+  const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [bookingMethod, setBookingMethod] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const formRef = useRef(null);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('contactFormData', JSON.stringify(formData));
+  }, [formData]);
+
+  // Scroll to top after submission
+  useEffect(() => {
+    if (submitted) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [submitted]);
+
+  // Calculate estimated timeline based on selections
+  const getEstimatedTimeline = () => {
+    const { serviceType, webPages, webFeatures, appPlatforms, appType, marketingServices } = formData;
+    
+    if (serviceType === 'web') {
+      const pages = parseInt(webPages) || 5;
+      const featureCount = webFeatures.length;
+      let weeks = 2;
+      if (pages > 10) weeks += 2;
+      else if (pages > 5) weeks += 1;
+      if (featureCount > 5) weeks += 2;
+      else if (featureCount > 2) weeks += 1;
+      if (webFeatures.includes('E‑commerce') || webFeatures.includes('Payment gateway')) weeks += 1;
+      return `${weeks} - ${weeks + 2} weeks`;
+    }
+    if (serviceType === 'app') {
+      const platforms = appPlatforms.length;
+      let weeks = 4; // base for single platform
+      if (platforms > 1) weeks += 2;
+      if (appType === 'native') weeks += 1;
+      if (appType === 'cross') weeks -= 1;
+      return `${weeks} - ${weeks + 3} weeks`;
+    }
+    if (serviceType === 'marketing') {
+      const servicesCount = marketingServices.length;
+      let weeks = 1; // strategy
+      if (servicesCount > 2) weeks += 1;
+      return `${weeks} - ${weeks + 2} weeks (initial campaign)`;
+    }
+    return '2 - 4 weeks';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+    
+    if (formData.serviceType === 'web' && !formData.webPages) {
+      newErrors.webPages = 'Please estimate number of pages';
+    }
+    if (formData.serviceType === 'app' && formData.appPlatforms.length === 0) {
+      newErrors.appPlatforms = 'Select at least one platform';
+    }
+    if (formData.serviceType === 'marketing' && formData.marketingServices.length === 0) {
+      newErrors.marketingServices = 'Select at least one marketing service';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      if (checked) {
-        setFormData(prev => ({ ...prev, [name]: [...prev[name], value] }));
-      } else {
-        setFormData(prev => ({ ...prev, [name]: prev[name].filter(item => item !== value) }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked ? [...prev[name], value] : prev[name].filter(item => item !== value)
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+      // Clear field-specific error when user starts typing
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleServiceTypeChange = (type) => {
     setFormData(prev => ({ ...prev, serviceType: type }));
+    // Clear errors related to old service type
+    setErrors({});
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    console.log('Lead captured via form:', formData);
-    setBookingMethod('form');
-    setSubmitted(true);
+    if (!validateForm()) return;
+    setIsSubmittingForm(true);
+    try {
+      // Simulate API call or just capture lead
+      console.log('Lead captured via form:', formData);
+      // In real app, send to backend
+      setBookingMethod('form');
+      setSubmitted(true);
+    } catch (error) {
+      alert('Submission failed. Please try again.');
+    } finally {
+      setIsSubmittingForm(false);
+    }
   };
 
   const handleWhatsAppClick = () => {
+    const timeline = getEstimatedTimeline();
     const message = encodeURIComponent(
-      `Hi SkyBridge Digital! I'm interested in a ${formData.serviceType} project.\nDetails: ${JSON.stringify(formData)}`
+`Hi SkyBridge Digital! 👋
+
+I'm interested in a ${formData.serviceType} project.
+
+Name: ${formData.name}
+Email: ${formData.email}
+
+Project Details:
+- Estimated timeline: ${timeline}
+- Pages: ${formData.webPages || '-'}
+- Features: ${formData.webFeatures?.join(', ') || '-'}
+- Platforms: ${formData.appPlatforms?.join(', ') || '-'}
+- App type: ${formData.appType || '-'}
+- Marketing services: ${formData.marketingServices?.join(', ') || '-'}
+- Target audience: ${formData.targetAudience || '-'}
+- Budget: ${formData.budgetRange || '-'}
+
+Additional Info: ${formData.additionalInfo || '-'}
+
+Looking forward to your response!`
     );
-    window.open(`https://wa.me/919629696474?text=${message}`, '_blank');
+    window.open(`https://wa.me/919677674551?text=${message}`, '_blank');
     setBookingMethod('whatsapp');
     setSubmitted(true);
   };
 
   const handleBookCall = () => {
-    window.open('https://calendly.com/skybridge-digital/30min', '_blank');
-    setBookingMethod('call');
+    const calendlyUrl = "https://calendly.com/skybridge-digital/30min";
+    window.open(calendlyUrl, "_blank", "noopener,noreferrer");
+    setBookingMethod("call");
     setSubmitted(true);
   };
 
@@ -107,25 +183,40 @@ const ContactPage = () => {
     const leadData = {
       ...formData,
       method: bookingMethod,
+      estimatedTimeline: getEstimatedTimeline(),
       timestamp: new Date().toISOString()
     };
     setIsAdding(true);
     try {
-      const response = await fetch('http://localhost:5000/api/leads', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(leadData)
       });
       if (response.ok) {
         alert('✅ Lead added to your project board!');
+        // Optionally clear localStorage after successful save
+        // localStorage.removeItem('contactFormData');
       } else {
-        alert('❌ Failed to add lead. Please try again.');
+        const errorData = await response.json();
+        alert(`❌ Failed: ${errorData.message || 'Please try again.'}`);
       }
     } catch (error) {
       console.error('Error saving lead:', error);
       alert('Network error. Please check your connection.');
     } finally {
       setIsAdding(false);
+    }
+  };
+
+  // Dynamic placeholder for additional info
+  const getAdditionalInfoPlaceholder = () => {
+    switch (formData.serviceType) {
+      case 'web': return 'e.g., Do you have existing branding? Any specific deadline?';
+      case 'app': return 'e.g., Do you have wireframes? Any third‑party integrations needed?';
+      case 'marketing': return 'e.g., Current website URL, existing social media handles, main competitors.';
+      default: return 'Any other requirements or questions?';
     }
   };
 
@@ -136,12 +227,20 @@ const ContactPage = () => {
         return (
           <>
             <div>
-              <label className="block text-white/80 text-sm mb-1">Number of pages (approx)</label>
-              <input type="text" name="webPages" value={formData.webPages} onChange={handleInputChange} placeholder="e.g., 5-10 pages" className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm" />
+              <label className="block text-white/80 text-sm mb-1">Number of pages (approx) *</label>
+              <input
+                type="text"
+                name="webPages"
+                value={formData.webPages}
+                onChange={handleInputChange}
+                placeholder="e.g., 5-10 pages"
+                className={`w-full px-3 py-2 bg-white/10 border ${errors.webPages ? 'border-red-400' : 'border-white/20'} rounded-lg text-white placeholder-white/50 text-sm`}
+              />
+              {errors.webPages && <p className="text-red-400 text-xs mt-1">{errors.webPages}</p>}
             </div>
             <div>
               <label className="block text-white/80 text-sm mb-1">Features needed (select all that apply)</label>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {['E‑commerce', 'Blog', 'CMS', 'User login', 'Payment gateway', 'Booking system', 'API integration'].map(feature => (
                   <label key={feature} className="flex items-center gap-2 text-white/70 text-sm">
                     <input type="checkbox" name="webFeatures" value={feature} onChange={handleInputChange} className="rounded" />
@@ -156,7 +255,7 @@ const ContactPage = () => {
         return (
           <>
             <div>
-              <label className="block text-white/80 text-sm mb-1">Platform(s)</label>
+              <label className="block text-white/80 text-sm mb-1">Platform(s) *</label>
               <div className="space-y-2">
                 {['iOS', 'Android', 'Both'].map(platform => (
                   <label key={platform} className="flex items-center gap-2 text-white/70 text-sm">
@@ -165,14 +264,20 @@ const ContactPage = () => {
                   </label>
                 ))}
               </div>
+              {errors.appPlatforms && <p className="text-red-400 text-xs mt-1">{errors.appPlatforms}</p>}
             </div>
             <div>
-              <label className="block text-white/80 text-sm mb-1">App type</label>
-              <select name="appType" value={formData.appType} onChange={handleInputChange} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
-                <option value="">Select</option>
-                <option value="native">Native (iOS/Android specific)</option>
-                <option value="cross">Cross‑platform (React Native/Flutter)</option>
-                <option value="pwa">Progressive Web App (PWA)</option>
+              <label className="block text-gray-300 text-sm mb-2">App type</label>
+              <select
+                name="appType"
+                value={formData.appType}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl text-gray-100 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition"
+              >
+                <option value="" className="bg-gray-900 text-gray-400">Select app type</option>
+                <option value="native" className="bg-gray-900">Native (iOS / Android specific)</option>
+                <option value="cross" className="bg-gray-900">Cross-platform (React Native / Flutter)</option>
+                <option value="pwa" className="bg-gray-900">Progressive Web App (PWA)</option>
               </select>
             </div>
           </>
@@ -181,8 +286,8 @@ const ContactPage = () => {
         return (
           <>
             <div>
-              <label className="block text-white/80 text-sm mb-1">Marketing services needed</label>
-              <div className="space-y-2">
+              <label className="block text-white/80 text-sm mb-1">Marketing services needed *</label>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {['SEO', 'Social Media Management', 'Google Ads (PPC)', 'Content Marketing', 'Email Marketing', 'Analytics Setup'].map(service => (
                   <label key={service} className="flex items-center gap-2 text-white/70 text-sm">
                     <input type="checkbox" name="marketingServices" value={service} onChange={handleInputChange} className="rounded" />
@@ -190,19 +295,32 @@ const ContactPage = () => {
                   </label>
                 ))}
               </div>
+              {errors.marketingServices && <p className="text-red-400 text-xs mt-1">{errors.marketingServices}</p>}
             </div>
             <div>
               <label className="block text-white/80 text-sm mb-1">Target audience / industry</label>
-              <input type="text" name="targetAudience" value={formData.targetAudience} onChange={handleInputChange} placeholder="e.g., B2B SaaS, local retail, e‑commerce" className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm" />
+              <input
+                type="text"
+                name="targetAudience"
+                value={formData.targetAudience}
+                onChange={handleInputChange}
+                placeholder="e.g., B2B SaaS, local retail, e‑commerce"
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm"
+              />
             </div>
             <div>
-              <label className="block text-white/80 text-sm mb-1">Monthly budget range</label>
-              <select name="budgetRange" value={formData.budgetRange} onChange={handleInputChange} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm">
-                <option value="">Select</option>
-                <option value="< $1k">Less than $1,000</option>
-                <option value="$1k-$5k">$1,000 – $5,000</option>
-                <option value="$5k-$10k">$5,000 – $10,000</option>
-                <option value="> $10k">Over $10,000</option>
+              <label className="block text-gray-300 text-sm mb-2">Monthly budget range</label>
+              <select
+                name="budgetRange"
+                value={formData.budgetRange}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition"
+              >
+                <option value="" className="bg-gray-900 text-gray-300">Select</option>
+                <option value="< $1k" className="bg-gray-900">Less than $1,000</option>
+                <option value="$1k-$5k" className="bg-gray-900">$1,000 – $5,000</option>
+                <option value="$5k-$10k" className="bg-gray-900">$5,000 – $10,000</option>
+                <option value="> $10k" className="bg-gray-900">Over $10,000</option>
               </select>
             </div>
           </>
@@ -213,17 +331,18 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black flex flex-col">
-      {/* <Background variant="professional" /> */}
+    <div className="relative min-h-screen flex flex-col">
+      <Background variant="professional" />
 
-      <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 py-3 sm:py-4">
+      {/* Header - increased height (matches Dashboard) */}
+      <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 py-4 sm:py-5">
         <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2">
             <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-sky-300 bg-clip-text text-transparent">
               SkyBridge Digital
             </span>
           </Link>
-          <Link to="/" className="text-white/70 hover:text-white text-sm sm:text-base transition">
+          <Link to="/dashboard" className="text-white/70 hover:text-white text-sm sm:text-base transition">
             ← Back to Dashboard
           </Link>
         </div>
@@ -243,15 +362,41 @@ const ContactPage = () => {
                 <p className="text-white/70 mt-3 text-sm sm:text-base">
                   Tell us about your requirements – we’ll respond within 24 hours.
                 </p>
+                {/* Estimated timeline banner */}
+                <div className="mt-4 inline-block px-4 py-1.5 bg-sky-500/20 border border-sky-500/30 rounded-full text-sky-300 text-sm">
+                  ⏱️ Estimated timeline: {getEstimatedTimeline()}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Form Card (now includes scope fields) */}
+                {/* Form Card */}
                 <motion.div whileHover={{ scale: 1.02 }} className="md:col-span-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl">
                   <div className="text-4xl mb-3">📝</div>
                   <h3 className="text-xl font-semibold text-white">Project Requirements</h3>
                   <p className="text-white/60 text-sm mt-1">Fill in the details below</p>
                   <form onSubmit={handleFormSubmit} className="mt-4 space-y-4">
+                    <div>
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Your name *"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className={`w-full px-3 py-2 bg-white/10 border ${errors.name ? 'border-red-400' : 'border-white/20'} rounded-lg text-white placeholder-white/50 text-sm`}
+                      />
+                      {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Email address *"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className={`w-full px-3 py-2 bg-white/10 border ${errors.email ? 'border-red-400' : 'border-white/20'} rounded-lg text-white placeholder-white/50 text-sm`}
+                      />
+                      {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                    </div>
 
                     {/* Service Type Selection */}
                     <div>
@@ -281,25 +426,50 @@ const ContactPage = () => {
                     {/* Dynamic Fields */}
                     {renderDynamicFields()}
 
-                    <textarea name="additionalInfo" placeholder="Any other requirements or questions?" rows="3" value={formData.additionalInfo} onChange={handleInputChange} className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm" />
+                    <textarea
+                      name="additionalInfo"
+                      placeholder={getAdditionalInfoPlaceholder()}
+                      rows="3"
+                      value={formData.additionalInfo}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm"
+                    />
 
-                    <button type="button" onClick={handlePayment} className="w-full py-2 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-lg text-white font-medium hover:shadow-lg transition">make an payment</button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingForm}
+                      className="w-full py-2 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-lg text-white font-medium hover:shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isSubmittingForm ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Sending...
+                        </>
+                      ) : 'Send Requirements'}
+                    </button>
                   </form>
                 </motion.div>
 
-                {/* WhatsApp & Call Cards (unchanged) */}
+                {/* WhatsApp & Call Cards */}
                 <div className="space-y-6">
                   <motion.div whileHover={{ scale: 1.02 }} className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl text-center">
                     <div className="text-4xl mb-3">💬</div>
                     <h3 className="text-xl font-semibold text-white">Chat on WhatsApp</h3>
                     <p className="text-white/60 text-sm mt-1">Instant reply via WhatsApp</p>
-                    <button onClick={handleWhatsAppClick} className="mt-4 px-4 py-2 bg-green-500/80 hover:bg-green-500 rounded-lg text-white font-medium transition w-full">Start WhatsApp Chat</button>
+                    <button onClick={handleWhatsAppClick} className="mt-4 px-4 py-2 bg-green-500/80 hover:bg-green-500 rounded-lg text-white font-medium transition w-full">
+                      Start WhatsApp Chat
+                    </button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl text-center">
                     <div className="text-4xl mb-3">📞</div>
                     <h3 className="text-xl font-semibold text-white">Book a Call</h3>
                     <p className="text-white/60 text-sm mt-1">30‑min free consultation</p>
-                    <button onClick={handleBookCall} className="mt-4 px-4 py-2 bg-purple-500/80 hover:bg-purple-500 rounded-lg text-white font-medium transition w-full">Schedule Call</button>
+                    <button onClick={handleBookCall} className="mt-4 px-4 py-2 bg-purple-500/80 hover:bg-purple-500 rounded-lg text-white font-medium transition w-full">
+                      Schedule Call
+                    </button>
                   </motion.div>
                 </div>
               </div>
@@ -316,8 +486,16 @@ const ContactPage = () => {
                 {bookingMethod === 'whatsapp' && "Great! Continue the conversation on WhatsApp – we're ready to help."}
                 {bookingMethod === 'call' && "You'll be redirected to our calendar. Pick a time that suits you."}
               </p>
-              <button onClick={handleAddToProject} disabled={isAdding} className="mt-6 px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50">
-                {isAdding ? 'Adding...' : '➕ Add to Project'}
+              <button onClick={handleAddToProject} disabled={isAdding} className="mt-6 px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 flex items-center justify-center gap-2 w-full">
+                {isAdding ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Adding...
+                  </>
+                ) : '➕ Add to Project'}
               </button>
               <p className="text-white/40 text-xs mt-4">Click “Add to Project” to save this lead to your dashboard.</p>
             </motion.div>
@@ -325,7 +503,8 @@ const ContactPage = () => {
         </motion.div>
       </main>
 
-      <footer className="mt-auto backdrop-blur-xl bg-black/20 border-t border-white/20 py-4 text-center text-white/40 text-xs">
+      {/* Footer - increased height */}
+      <footer className="mt-auto backdrop-blur-xl bg-black/20 border-t border-white/20 py-8 text-center text-white/40 text-sm">
         <p>© {new Date().getFullYear()} SkyBridge Digital – Let’s build something great.</p>
       </footer>
     </div>
